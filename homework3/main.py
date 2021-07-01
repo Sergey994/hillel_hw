@@ -28,7 +28,8 @@ def create_db():
             sales_line = Sales(Transaction_date=datetime.strptime(line['Transaction_date'], "%m/%d/%Y %H:%M"),
                                Product=line['Product'], Price=float(line['Price']), Payment_Type=line['Payment_Type'])
             db.session.add(sales_line)
-            db.session.commit()
+        db.session.commit()
+    return 'DB created'
 
 
 @app.route('/summary/')
@@ -44,16 +45,15 @@ def summary():
 
 @app.route('/sales/')
 def sales():
-    product = request.args.get('product')
-    payment_type = request.args.get('payment_type')
-    if product is None and payment_type is None:
-        query = Sales.query
-    elif payment_type is None:
-        query = Sales.query.filter_by(Product=product)
-    elif product is None:
-        query = Sales.query.filter_by(Payment_Type=payment_type)
-    else:
-        query = Sales.query.filter_by(Product=product, Payment_Type=payment_type)
+    args = {}
+    params = {
+        'product': 'Product',
+        'payment_type': 'Payment_Type'
+    }
+    for i in request.args.keys():
+        if i in params.keys():
+            args[params[i]] = request.args[i]
+    query = Sales.query.filter_by(**args)
     result = '<table border=1><tr><td>Transaction date</td><td>Product</td><td>Price</td><td>Payment type</td></tr>'
     for i in query.all():
         result += f'<tr><td>{str(i.Transaction_date)}</td><td>{i.Product}</td><td>{str(i.Price)}</td><td>{i.Payment_Type}</td></tr>'
